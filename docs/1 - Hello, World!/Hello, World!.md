@@ -3,7 +3,7 @@
 This is the "Hello, World!" program in Prisma. It demonstrates how to use the `output` function to display text on the console.
 ## Code example
 ```
-# This is a Prisma program that outputs `Hello, World!` to the console
+# This is a Prisma program that outputs "Hello, World!" to the console
 output("Hello, World!");
 ```
 
