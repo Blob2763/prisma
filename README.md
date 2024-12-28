@@ -1,5 +1,5 @@
 # prisma
-A programming language designed to be user-friendly
+A programming language
 
 ## Docs
 - [Getting Started](https://github.com/Blob2763/prisma/blob/main/docs/0%20-%20Getting%20Started/Getting%20Started.md)
