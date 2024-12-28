@@ -8,7 +8,8 @@
      ```bash
      python main.py
      ```
-4. To write your own code, just edit the `code.prsm` file.
+4. If everything works, you should get `Prisma is working!` as the output.
+5. To write your own code, just edit the `code.prsm` file.
 
 > [!IMPORTANT]  
 > You must have Python installed for Prisma to work

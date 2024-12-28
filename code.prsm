@@ -1,9 +1,1 @@
-set n = 10;
-set result = 1;
-
-while (n >= 1) {
-    set result = result * n;
-    set n = n - 1;
-}
-
-output(result);
+output("Prisma is working!");
