@@ -10,6 +10,7 @@ LOOP WHILE -> is "while"
 
 IGNORE WHITESPACE -> is " "
 IGNORE NEWLINE -> is "\n"
+IGNORE TAB -> is "\t"
 IGNORE COMMENT -> between "#" and "\n"
 
 FUNCTION OUTPUT -> is "output"
