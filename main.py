@@ -1,22 +1,11 @@
-from lex import tokenise
-import re
 from functions import *
 from helper import *
 from debug import *
 from timeit import default_timer
+from error import display_error
+from tokens import *
 
 start_time = default_timer()
-
-CODE_FILE = "code.prsm"
-
-tokens = tokenise("rules.lexif", CODE_FILE)
-with open(CODE_FILE, "r") as file:
-    code = file.read()
-    lines = code.split("\n")
-    line_start_positions = [0] + [m.end() for m in re.finditer("\n", code)]
-#hiuidug
-num_tokens = len(tokens)
-token_number = 0
 
 
 class CodeError(Exception):
@@ -47,19 +36,6 @@ class CodeError(Exception):
         self.lines = lines[
             self.start_token["line_number"] - 1 : self.end_token["line_number"]
         ]
-
-
-def skip_to_non_ignore():
-    global token_number
-    while token_number < num_tokens and tokens[token_number]["class"] == "IGNORE":
-        token_number += 1
-
-
-def next_non_ignore():
-    global token_number
-    token_number += 1
-    if token_number < num_tokens:
-        skip_to_non_ignore()
 
 
 def get_parameters():
@@ -133,16 +109,6 @@ def safe_execute(func, parameters):
         return func(parameters)
     except FakeCodeError as e:
         raise_code_error(e)
-
-
-def find_line_number(position):
-    return len(
-        [
-            line_start_pos
-            for line_start_pos in line_start_positions
-            if line_start_pos <= position
-        ]
-    )
 
 
 try:
@@ -302,110 +268,7 @@ try:
 
         next_non_ignore()
 except CodeError as e:
-    error_line_numbers = range(
-        e.start_token["line_number"], e.end_token["line_number"] + 1
-    )
-    line_number_digits = len(str(error_line_numbers[-1]))
-    max_line_width = max(len(line) for line in e.lines)
-    display_lines = [line.ljust(max_line_width) for line in e.lines]
-
-    if e.token:
-        underline_start_position = e.token["start_position"]
-        underline_end_position = e.token["end_position"]
-    else:
-        underline_start_position = e.start_position
-        underline_end_position = e.end_position
-
-    underline_start_line_number = find_line_number(underline_start_position)
-    underline_end_line_number = find_line_number(underline_end_position)
-    relative_underline_start_position = (
-        underline_start_position - line_start_positions[underline_start_line_number - 1]
-    )
-    relative_underline_end_position = (
-        underline_end_position - line_start_positions[underline_end_line_number - 1] + 1
-    )
-
-    relative_underline_start_line_number = (
-        underline_start_line_number - error_line_numbers[0]
-    )
-    relative_underline_end_line_number = (
-        underline_end_line_number - error_line_numbers[0]
-    )
-
-    if relative_underline_start_line_number == relative_underline_end_line_number:
-        display_lines[relative_underline_start_line_number] = insert_substrings(
-            display_lines[relative_underline_start_line_number],
-            "\033[4m",
-            relative_underline_start_position,
-            "\033[24m",
-            relative_underline_end_position,
-        )
-    else:
-        display_lines[relative_underline_start_line_number] = insert_substrings(
-            display_lines[relative_underline_start_line_number],
-            "\033[4m",
-            relative_underline_start_position,
-            "",
-            relative_underline_start_position,
-        )
-
-        print("\033[0m", end="")
-
-        display_lines[relative_underline_end_line_number] = insert_substrings(
-            display_lines[relative_underline_end_line_number],
-            "\033[24m",
-            relative_underline_end_position,
-            "",
-            relative_underline_end_position,
-        )
-
-    for i, (line, line_number) in enumerate(zip(display_lines, error_line_numbers)):
-        if line_number == underline_start_line_number:
-            display_lines[i] = line + "\033[24m"
-
-        if (
-            line_number > underline_start_line_number
-            and line_number < underline_end_line_number
-        ):
-            line = (
-                "\033[4m"
-                + line.strip()
-                + "\033[24m"
-                + " " * (max_line_width - len(line.strip()))
-            )
-            display_lines[i] = line
-
-        if (
-            line_number == underline_end_line_number
-            and line_number != underline_start_line_number
-        ):
-            display_lines[i] = "\033[4m" + line
-
-    if len(error_line_numbers) == 1:
-        print(f"\033[31mError at line {e.line_number}: {e}\033[0m")
-    else:
-        print(
-            f"\033[31mError from line {error_line_numbers[0]} to {error_line_numbers[-1]}: {e}\033[0m"
-        )
-    print("\033[31m", end="")
-    print(f"╭─{"─" * line_number_digits}─┬─{"─" * max_line_width}─╮")
-    for line, line_number in zip(display_lines, error_line_numbers):
-        if DEBUG_SHOW_RAW_ERROR:
-            print(
-                f"\033[33m│ {str(line_number).ljust(line_number_digits)} │ {repr(line)} │\033[0m"
-            )
-        else:
-            print(f"│ {str(line_number).ljust(line_number_digits)} │ {line} │")
-    print(f"╰─{"─" * line_number_digits}─┴─{"─" * max_line_width}─╯")
-    print("\033[0m", end="")
-
-    print(f"\033[31mError code {e.error_code}\033[0m")
-    print(
-        f"\033[31m{CODE_FILE}:{e.line_number}:{relative_underline_start_position + 1}\033[0m"
-    )
-
-    if DEBUG_SHOW_ERROR_TOKEN:
-        print("\033[33mDEBUG", e.token, "\033[0m")    
+    display_error(e)
 
 end_time = default_timer()
 if DEBUG_SHOW_TIME_TAKEN:

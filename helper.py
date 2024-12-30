@@ -1,4 +1,5 @@
 from copy import deepcopy
+from tokens import *
 
 VARIABLES = {}
 STACK = []
@@ -9,10 +10,6 @@ class FakeCodeError(Exception):
         super().__init__(message)
         self.error_code = error_code
         self.error_token = error_token
-
-
-def check_token_type(token, token_class, token_subclass):
-    return token["class"] == token_class and token["subclass"] == token_subclass
 
 
 def infix_to_postfix(tokens):
@@ -91,37 +88,6 @@ def infix_to_postfix(tokens):
         postfix.append(stack.pop())
 
     return postfix
-
-
-def format_content(token):
-    content = token["content"]
-
-    if check_token_type(token, "LITERAL", "STRING"):
-        token["content"] = str(content)
-    elif check_token_type(token, "LITERAL", "NUMBER"):
-        try:
-            token["content"] = int(content)
-        except ValueError:
-            token["content"] = float(content)
-    elif check_token_type(token, "LITERAL", "BOOLEAN"):
-        if content == "true":
-            token["content"] == True
-        if content == "false":
-            token["content"] == False
-
-
-def stringify_content(token):
-    content = token["content"]
-
-    if check_token_type(token, "LITERAL", "STRING"):
-        token["content"] = str(content)
-    elif check_token_type(token, "LITERAL", "NUMBER"):
-        token["content"] = str(content)
-    elif check_token_type(token, "LITERAL", "BOOLEAN"):
-        if content == True:
-            token["content"] = "true"
-        if content == False:
-            token["content"] = "false"
 
 
 def evaluate_postfix(tokens):
