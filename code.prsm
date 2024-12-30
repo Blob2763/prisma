@@ -1,3 +1,1 @@
-repeat (5) {
-    output("Prisma is working!");
-}
+output("Prisma is working!");
