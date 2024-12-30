@@ -66,21 +66,6 @@ def get_keyword_tokens():
     return keyword_tokens
 
 
-def raise_code_error(error):
-    raise CodeError(
-        error,
-        error_code=error.error_code,
-        error_token=error.error_token,
-    )
-
-
-def safe_execute(func, parameters):
-    try:
-        return func(parameters)
-    except CodeError as e:
-        raise_code_error(e)
-
-
 try:
     if check_token_type(tokens[-1], "ERROR", "UNFINISHED_TOKEN"):
         raise CodeError("Unfinished token", error_code=1003, error_token=tokens[-1])
@@ -133,7 +118,7 @@ try:
             if num_parameters == num_expected_parameters:
                 # Code for each function
                 if function_name == "OUTPUT":
-                    safe_execute(output, parameters)
+                    output(parameters)
             else:
                 if num_parameters == 0:
                     error_token = l_paren_token
@@ -161,7 +146,7 @@ try:
             keyword_tokens = get_keyword_tokens()
 
             if keyword_name == "SET":
-                safe_execute(kwd_set, keyword_tokens)
+                kwd_set(keyword_tokens)
         elif token["class"] == "LOOP":
             loop_name = token["subclass"]
             next_non_ignore()
