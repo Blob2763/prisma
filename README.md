@@ -6,4 +6,4 @@
 - [Functions](https://github.com/Blob2763/prisma/tree/main/docs/2%20-%20Syntax)
 - [Functions](https://github.com/Blob2763/prisma/tree/main/docs/3%20-%20Functions)
 - [Keywords](https://github.com/Blob2763/prisma/tree/main/docs/4%20-%20Keywords)
-- [Keywords](https://github.com/Blob2763/prisma/tree/main/docs/5%20-%20Loops)
+- [Loops](https://github.com/Blob2763/prisma/tree/main/docs/5%20-%20Loops)
