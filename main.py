@@ -2,54 +2,24 @@ from functions import *
 from helper import *
 from debug import *
 from timeit import default_timer
-from error import display_error
+from error import *
 from tokens import *
 
 start_time = default_timer()
 
 
-class CodeError(Exception):
-    def __init__(
-        self,
-        message,
-        error_code,
-        error_token=None,
-        start_position=None,
-        end_position=None,
-    ):
-        super().__init__(message)
-        self.error_code = error_code
-        self.token = error_token or tokens[token_number]
-        self.start_position = start_position or self.token["start_position"]
-        self.end_position = end_position or self.token["end_position"]
-        self.line_number = self.token["line_number"]
-        self.line_position = line_start_positions[self.line_number - 1]
-        self.line = lines[self.line_number - 1]
-        self.relative_start_position = self.start_position - self.line_position
-        self.relative_end_position = self.end_position - self.line_position
-        self.start_token = [
-            t for t in tokens if t["start_position"] <= self.start_position
-        ][-1]
-        self.end_token = [t for t in tokens if t["end_position"] >= self.end_position][
-            0
-        ]
-        self.lines = lines[
-            self.start_token["line_number"] - 1 : self.end_token["line_number"]
-        ]
-
-
 def get_parameters():
     parameters = []
     current_parameter = []
-    while not check_token_type(tokens[token_number], "DELIMITER", "RPAREN"):
-        if check_token_type(tokens[token_number], "DELIMITER", "COMMA"):
+    while not check_token_type(get_current_token(), "DELIMITER", "RPAREN"):
+        if check_token_type(get_current_token(), "DELIMITER", "COMMA"):
             parameters.append(current_parameter)
             current_parameter = []
         else:
-            current_parameter.append(tokens[token_number])
+            current_parameter.append(get_current_token())
         next_non_ignore()
 
-        if token_number >= num_tokens:
+        if get_token_number() >= num_tokens:
             raise CodeError(
                 "Expected ')' at the end",
                 error_code=1006,
@@ -65,22 +35,22 @@ def get_parameters():
 
 
 def get_function_tokens():
-    l_paren_token = tokens[token_number]
+    l_paren_token = get_current_token()
     next_non_ignore()
     parameters, num_parameters = get_parameters()
-    r_paren_token = tokens[token_number]
+    r_paren_token = get_current_token()
 
     return l_paren_token, parameters, num_parameters, r_paren_token
 
 
 def get_keyword_tokens():
     keyword_tokens = []
-    while not check_token_type(tokens[token_number], "DELIMITER", "SEMICOLON"):
-        current_token = tokens[token_number]
+    while not check_token_type(get_current_token(), "DELIMITER", "SEMICOLON"):
+        current_token = get_current_token()
 
         keyword_tokens.append(current_token)
         if (
-            token_number >= num_tokens
+            get_token_number() >= num_tokens
             or current_token["class"] == "FUNCTION"
             or current_token["class"] == "KEYWORD"
             or current_token["class"] == "LOOP"
@@ -96,18 +66,18 @@ def get_keyword_tokens():
     return keyword_tokens
 
 
-def raise_code_error(fake_code_error):
+def raise_code_error(error):
     raise CodeError(
-        fake_code_error,
-        error_code=fake_code_error.error_code,
-        error_token=fake_code_error.error_token,
+        error,
+        error_code=error.error_code,
+        error_token=error.error_token,
     )
 
 
 def safe_execute(func, parameters):
     try:
         return func(parameters)
-    except FakeCodeError as e:
+    except CodeError as e:
         raise_code_error(e)
 
 
@@ -116,8 +86,8 @@ try:
         raise CodeError("Unfinished token", error_code=1003, error_token=tokens[-1])
 
     skip_to_non_ignore()
-    while token_number < num_tokens:
-        token = tokens[token_number]
+    while get_token_number() < num_tokens:
+        token = get_current_token()
         
         if DEBUG_ONLY_TOKENS:
             print(f"\033[33m{token}\033[0m")
@@ -129,18 +99,18 @@ try:
         except IndexError:
             top_stack = None
             
-        if top_stack and top_stack["end"] == token_number:
+        if top_stack and top_stack["end"] == get_token_number():
             if top_stack["type"] == "REPEAT":
                 top_stack["times"] -= 1
                 if top_stack["times"] > 0:
-                    token_number = top_stack["start"]
+                    set_token_number(top_stack["start"])
                 else:
                     STACK.pop()
                     next_non_ignore()
             if top_stack["type"] == "WHILE":
                 condition = evaluate_tokens(top_stack["condition_tokens"])
                 if condition["content"]:
-                    token_number = top_stack["start"]
+                    set_token_number(top_stack["start"])
                 else:
                     STACK.pop()
                     next_non_ignore()
@@ -150,7 +120,7 @@ try:
             function_name = token["subclass"]
             next_non_ignore()
 
-            if not check_token_type(tokens[token_number], "DELIMITER", "LPAREN"):
+            if not check_token_type(get_current_token(), "DELIMITER", "LPAREN"):
                 raise CodeError(
                     f"Expected '(' after {function_name.lower()}", error_code=1002
                 )
@@ -176,8 +146,8 @@ try:
                     error_token=l_paren_token,
                 )
             next_non_ignore()
-            if token_number >= num_tokens or not check_token_type(
-                tokens[token_number], "DELIMITER", "SEMICOLON"
+            if get_token_number() >= num_tokens or not check_token_type(
+                get_current_token(), "DELIMITER", "SEMICOLON"
             ):
                 raise CodeError(
                     "Expected ';' at the end",
@@ -195,41 +165,41 @@ try:
         elif token["class"] == "LOOP":
             loop_name = token["subclass"]
             next_non_ignore()
-            if not check_token_type(tokens[token_number], "DELIMITER", "LPAREN"):
+            if not check_token_type(get_current_token(), "DELIMITER", "LPAREN"):
                 raise CodeError(
                     f"Expected '(' after {loop_name.lower()}", error_code=1002
                 )
             next_non_ignore()
             loop_parameters = []
             current_parameter = []
-            while not check_token_type(tokens[token_number], "DELIMITER", "RPAREN"):
-                if check_token_type(tokens[token_number], "DELIMITER", "COMMA"):
+            while not check_token_type(get_current_token(), "DELIMITER", "RPAREN"):
+                if check_token_type(get_current_token(), "DELIMITER", "COMMA"):
                     loop_parameters.append(current_parameter)
                     current_parameter = []
 
-                current_parameter.append(tokens[token_number])
+                current_parameter.append(get_current_token())
                 next_non_ignore()
             if current_parameter:
                 loop_parameters.append(current_parameter)
             next_non_ignore()
-            if not check_token_type(tokens[token_number], "DELIMITER", "LBRACE"):
+            if not check_token_type(get_current_token(), "DELIMITER", "LBRACE"):
                 raise CodeError(
                     "Expected '{' " + f"after {loop_name.lower()}", error_code=1009
                 )
             next_non_ignore()
             loop_code = []
-            loop_code_start = token_number
-            while not check_token_type(tokens[token_number], "DELIMITER", "RBRACE"):
-                loop_code.append(tokens[token_number])
+            loop_code_start = get_token_number()
+            while not check_token_type(get_current_token(), "DELIMITER", "RBRACE"):
+                loop_code.append(get_current_token())
                 next_non_ignore()
 
-                if token_number >= num_tokens:
+                if get_token_number() >= num_tokens:
                     raise CodeError(
                         "Expected '}' at the end",
                         error_code=1008,
                         error_token=loop_code[-1],
                     )
-            loop_code_end = token_number
+            loop_code_end = get_token_number()
 
             if loop_name == "REPEAT":
                 STACK.append(
@@ -243,7 +213,7 @@ try:
                     }
                 )
                 
-                token_number = loop_code_start - 1
+                set_token_number(loop_code_start - 1)
             elif loop_name == "WHILE":
                 condition_tokens = loop_parameters[0]
                 if evaluate_tokens(condition_tokens)["content"]:
@@ -258,7 +228,7 @@ try:
                         }
                     )
                     
-                    token_number = loop_code_start - 1
+                    set_token_number(loop_code_start - 1)
         else:
             raise CodeError(
                 f"Unexpected token '{token['content']}'",

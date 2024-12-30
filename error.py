@@ -2,6 +2,47 @@ from debug import *
 from helper import *
 from tokens import *
 
+
+def insert_substrings(original_string, substring1, position1, substring2, position2):
+    return (
+        original_string[:position1]
+        + substring1
+        + original_string[position1:position2]
+        + substring2
+        + original_string[position2:]
+    )
+
+
+class CodeError(Exception):
+    def __init__(
+        self,
+        message,
+        error_code,
+        error_token=None,
+        start_position=None,
+        end_position=None,
+    ):
+        super().__init__(message)
+        self.error_code = error_code
+        self.token = error_token or get_current_token()
+        self.start_position = start_position or self.token["start_position"]
+        self.end_position = end_position or self.token["end_position"]
+        self.line_number = self.token["line_number"]
+        self.line_position = line_start_positions[self.line_number - 1]
+        self.line = lines[self.line_number - 1]
+        self.relative_start_position = self.start_position - self.line_position
+        self.relative_end_position = self.end_position - self.line_position
+        self.start_token = [
+            t for t in tokens if t["start_position"] <= self.start_position
+        ][-1]
+        self.end_token = [t for t in tokens if t["end_position"] >= self.end_position][
+            0
+        ]
+        self.lines = lines[
+            self.start_token["line_number"] - 1 : self.end_token["line_number"]
+        ]
+
+
 def display_error(e):
     error_line_numbers = range(
         e.start_token["line_number"], e.end_token["line_number"] + 1

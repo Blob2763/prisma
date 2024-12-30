@@ -1,5 +1,6 @@
 from helper import *
 from tokens import *
+from error import CodeError
 
 EXPECTED_PARAMETERS = {"OUTPUT": 1}
 
@@ -7,8 +8,8 @@ def output(parameters):
     to_print = parameters[0]
     try:
         evaluated = evaluate_tokens(to_print)
-    except FakeCodeError as e:
-        raise FakeCodeError(e, error_code=e.error_code, error_token=e.error_token)
+    except CodeError as e:
+        raise CodeError(e, error_code=e.error_code, error_token=e.error_token)
     
     evaluated = evaluate_tokens(to_print)
     stringify_content(evaluated)
@@ -23,7 +24,7 @@ def output(parameters):
     
 def kwd_set(keyword_tokens):
     if not check_token_type(keyword_tokens[0], "IDENTIFIER", "VARIABLE"):
-        raise FakeCodeError("Expected variable name after SET", error_code=1004)
+        raise CodeError("Expected variable name after SET", error_code=1004)
 
     variable_token = keyword_tokens[0]
     variable_name = variable_token["content"]

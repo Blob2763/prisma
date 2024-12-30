@@ -1,15 +1,9 @@
 from copy import deepcopy
 from tokens import *
+from error import CodeError
 
 VARIABLES = {}
 STACK = []
-
-
-class FakeCodeError(Exception):
-    def __init__(self, message, error_code, error_token=None):
-        super().__init__(message)
-        self.error_code = error_code
-        self.error_token = error_token
 
 
 def infix_to_postfix(tokens):
@@ -38,7 +32,7 @@ def infix_to_postfix(tokens):
             try:
                 token = VARIABLES[token["content"]]
             except KeyError:
-                raise FakeCodeError(
+                raise CodeError(
                     f"Undefined variable: {token['content']}",
                     error_code=2002,
                     error_token=token,
@@ -60,7 +54,7 @@ def infix_to_postfix(tokens):
             while stack and not check_token_type(stack[-1], "DELIMITER", "LPAREN"):
                 postfix.append(stack.pop())
             if not stack:
-                raise FakeCodeError(
+                raise CodeError(
                     "Mismatched parentheses: Missing left parenthesis.",
                     error_code=1005,
                     error_token=token,
@@ -69,7 +63,7 @@ def infix_to_postfix(tokens):
         else:
             # Unexpected token
             if check_token_type(token, "LITERAL", "STRING"):
-                raise FakeCodeError(
+                raise CodeError(
                     "Cannot perform arithmetic on STRING",
                     error_code=2003,
                     error_token=token,
@@ -80,7 +74,7 @@ def infix_to_postfix(tokens):
     # Pop any remaining operators in the stack
     while stack:
         if check_token_type(stack[-1], "DELIMITER", "LPAREN"):
-            raise FakeCodeError(
+            raise CodeError(
                 "Mismatched parentheses: Missing right parenthesis.",
                 error_code=1005,
                 error_token=stack[-1],
@@ -227,7 +221,7 @@ def evaluate_tokens(tokens):
     tokens = deepcopy(tokens)  # Avoid original tokens being altered
     
     if len(tokens) == 0:
-        raise FakeCodeError("Expected expression", 1006)
+        raise CodeError("Expected expression", 1006)
 
     # Replace variables with their values
     for i, token in enumerate(tokens):
@@ -238,7 +232,7 @@ def evaluate_tokens(tokens):
                 tokens[i]["end_position"] = token["end_position"]
                 tokens[i]["line_number"] = token["line_number"]
             except KeyError as e:
-                raise FakeCodeError(
+                raise CodeError(
                     f"Variable {e} is not defined", error_code=2002, error_token=token
                 )
 
@@ -246,16 +240,6 @@ def evaluate_tokens(tokens):
         return tokens[0]
     else:
         return evaluate_postfix(infix_to_postfix(tokens))
-
-
-def insert_substrings(original_string, substring1, position1, substring2, position2):
-    return (
-        original_string[:position1]
-        + substring1
-        + original_string[position1:position2]
-        + substring2
-        + original_string[position2:]
-    )
 
 
 def plural_s(num):

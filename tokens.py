@@ -11,16 +11,40 @@ with open(CODE_FILE, "r") as file:
 
 num_tokens = len(tokens)
 token_number = 0
+current_token = tokens[token_number]
+
+
+def get_token_number():
+    return token_number
+
+
+def set_token_number(value):
+    global token_number
+    global current_token
+    # print("a", current_token)
+    token_number = value
+    try:
+        current_token = tokens[token_number]
+    except Exception as e:
+        pass
+    # print("b", current_token)
+
+
+def increment_token_number():
+    set_token_number(get_token_number() + 1)
+    
+
+def get_current_token():
+    return current_token
+
 
 def skip_to_non_ignore():
-    global token_number
     while token_number < num_tokens and tokens[token_number]["class"] == "IGNORE":
-        token_number += 1
+        increment_token_number()
 
 
 def next_non_ignore():
-    global token_number
-    token_number += 1
+    increment_token_number()
     if token_number < num_tokens:
         skip_to_non_ignore()
 
