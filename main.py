@@ -14,7 +14,7 @@ with open(CODE_FILE, "r") as file:
     code = file.read()
     lines = code.split("\n")
     line_start_positions = [0] + [m.end() for m in re.finditer("\n", code)]
-
+#hiuidug
 num_tokens = len(tokens)
 token_number = 0
 
