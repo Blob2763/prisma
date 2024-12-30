@@ -21,7 +21,7 @@ Hello, World!
 `repeat` expects exactly 1 parameter.
 | Parameter | Type | Meaning |
 |-|-|-|
-| `times` | Number | The number of times to loop. If the number is a decimal, it is rounded down. |
+| `times` | Number | The number of times to loop. If the number is a decimal, it is rounded down |
 
 ## More Examples
 Output the numbers 1-5 in order:
