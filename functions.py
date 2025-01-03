@@ -2,32 +2,25 @@ from helper import *
 from tokens import *
 from error import CodeError
 
-EXPECTED_PARAMETERS = {"OUTPUT": 1}
-
-def output(parameters):
+def func_output(parameters):
     to_print = parameters[0]
-    try:
-        evaluated = evaluate_tokens(to_print)
-    except CodeError as e:
-        raise CodeError(e, error_code=e.error_code, error_token=e.error_token)
-    
     evaluated = evaluate_tokens(to_print)
     stringify_content(evaluated)
     content = evaluated["content"]
-    
-    if content.startswith('"') and content.endswith('"'):
-        content = content.strip('"')
-    elif content.startswith("'") and content.endswith("'"):
-        content = content.strip("'")
+    remove_quotes(content)
     
     print(content)
     
 def kwd_set(keyword_tokens):
     if not check_token_type(keyword_tokens[0], "IDENTIFIER", "VARIABLE"):
-        raise CodeError("Expected variable name after SET", error_code=1004)
+        raise CodeError("Expected variable name after 'set'", error_code=1004, error_token=keyword_tokens[0])
+
+    if not check_token_type(keyword_tokens[1], "OPERATION", "EQUALS"):
+        raise CodeError("Expected '=' after variable name", error_code=1004, error_token=keyword_tokens[1])
 
     variable_token = keyword_tokens[0]
     variable_name = variable_token["content"]
     expression_tokens = keyword_tokens[2:]
+    value = evaluate_tokens(expression_tokens)
 
-    VARIABLES[variable_name] = evaluate_tokens(expression_tokens)
+    VARIABLES[variable_name] = value

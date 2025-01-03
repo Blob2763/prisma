@@ -1,1 +1,5 @@
-output("Prisma is working!");
+set x = 5;
+repeat (5) {
+    output(x);
+    set x = x-1;
+}

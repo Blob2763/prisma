@@ -1,3 +1,7 @@
+def plural_s(num):
+    return "s" if num != 1 else ""
+
+
 from copy import deepcopy
 from tokens import *
 from error import CodeError
@@ -242,5 +246,8 @@ def evaluate_tokens(tokens):
         return evaluate_postfix(infix_to_postfix(tokens))
 
 
-def plural_s(num):
-    return "s" if num != 1 else ""
+def remove_quotes(string):
+    if string.startswith('"') and string.endswith('"'):
+        string = string.strip('"')
+    elif string.startswith("'") and string.endswith("'"):
+        string = string.strip("'")
