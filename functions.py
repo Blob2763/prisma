@@ -7,7 +7,7 @@ def func_output(parameters):
     evaluated = evaluate_tokens(to_print)
     stringify_content(evaluated)
     content = evaluated["content"]
-    remove_quotes(content)
+    content = remove_quotes(content)
     
     print(content)
     

@@ -251,3 +251,5 @@ def remove_quotes(string):
         string = string.strip('"')
     elif string.startswith("'") and string.endswith("'"):
         string = string.strip("'")
+        
+    return string
